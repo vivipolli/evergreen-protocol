@@ -1,91 +1,121 @@
+const { Connection, clusterApiUrl, Keypair, PublicKey } = require('@solana/web3.js');
 const { Metaplex, keypairIdentity } = require('@metaplex-foundation/js');
-const { Connection, clusterApiUrl, Keypair } = require('@solana/web3.js');
 const ipfsService = require('./ipfsService');
 const axios = require('axios');
 
+console.log('Environment variables:', {
+  hasWalletKey: !!process.env.WALLET_SECRET_KEY,
+  rpcUrl: process.env.SOLANA_RPC_URL,
+  pinataApiKey: !!process.env.PINATA_API_KEY,
+  pinataSecretApiKey: !!process.env.PINATA_SECRET_API_KEY
+});
+
 class NftService {
   constructor() {
-    this.connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
-    this.wallet = Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(process.env.WALLET_SECRET_KEY))
-    );
-    this.metaplex = new Metaplex(this.connection);
-    this.metaplex.use(keypairIdentity(this.wallet));
+    if (!process.env.WALLET_SECRET_KEY) {
+      throw new Error('WALLET_SECRET_KEY environment variable is not set');
+    }
+
+    try {
+      const secretKey = JSON.parse(process.env.WALLET_SECRET_KEY);
+      const keypair = Keypair.fromSecretKey(new Uint8Array(secretKey));
+      
+      const connection = new Connection(clusterApiUrl('devnet'));
+      this.metaplex = Metaplex.make(connection)
+        .use(keypairIdentity(keypair))
+    } catch (error) {
+      throw new Error('Failed to initialize NFT service: ' + error.message);
+    }
   }
 
   async createLandToken(landData) {
     try {
-      // Upload land image to IPFS
-      const imageUpload = await ipfsService.uploadFile(
-        landData.imagePath,
-        'land-image.png'
-      );
-      const imageUri = `ipfs://${imageUpload.IpfsHash}`;
+      if (!landData.ownerAddress) {
+        throw new Error('Owner address is required');
+      }
 
       // Create metadata
       const metadata = {
-        name: landData.name,
+        name: landData.propertyName,
         symbol: 'EVG-L',
-        description: landData.description,
-        image: imageUri,
+        description: 'Land token representing forest preservation commitment',
+        image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
         attributes: [
           {
+            trait_type: 'CAR Number',
+            value: landData.carNumber,
+          },
+          {
+            trait_type: 'CAR Status',
+            value: landData.carStatus,
+          },
+          {
             trait_type: 'Vegetation Coverage',
-            value: landData.vegetationCoverage,
+            value: landData.environmentalMetadata.vegetationCover,
           },
           {
-            trait_type: 'Hectares',
-            value: landData.hectares,
+            trait_type: 'Has APP',
+            value: landData.environmentalMetadata.hasApp,
           },
           {
-            trait_type: 'Water Bodies',
-            value: landData.waterBodies,
+            trait_type: 'APP Details',
+            value: landData.environmentalMetadata.appDetails || 'N/A',
           },
           {
-            trait_type: 'Springs',
-            value: landData.springs,
-          },
-          {
-            trait_type: 'CAR Registry',
-            value: landData.carRegistry,
+            trait_type: 'Commitment Hash',
+            value: landData.commitmentHash,
           },
         ],
         properties: {
           files: [
             {
-              uri: imageUri,
+              uri: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
               type: 'image/png',
             },
+            {
+              uri: landData.geoJson,
+              type: 'application/geo+json',
+            },
           ],
-          category: 'image',
+          category: 'land',
         },
       };
 
-      // Upload metadata to IPFS
+      // Upload metadata to IPFS using Pinata
       const metadataUpload = await ipfsService.uploadMetadata(metadata);
       const metadataUri = `ipfs://${metadataUpload.IpfsHash}`;
 
-      // Convert owner address string to PublicKey
-      const ownerPublicKey = new PublicKey(landData.ownerAddress);
+      console.log('Creating NFT with metadata:', metadataUri);
 
-      // Create NFT using Metaplex
+      // Create NFT
       const { nft } = await this.metaplex.nfts().create({
         uri: metadataUri,
-        name: landData.name,
-        symbol: 'EVG-L',
+        name: landData.propertyName,
         sellerFeeBasisPoints: 0,
-        isCollection: false,
-        updateAuthority: ownerPublicKey,
-        mintAuthority: ownerPublicKey,
+        updateAuthority: this.metaplex.identity(),
+        mintAuthority: this.metaplex.identity(),
         tokenStandard: 0,
-        tokenOwner: ownerPublicKey,
+        isCollection: false,
       });
+
+      console.log('NFT created:', nft.mint.address.toBase58());
+
+      // Transfer NFT to the owner
+      console.log('Transferring NFT to owner:', landData.ownerAddress);
+      const { response } = await this.metaplex.nfts().transfer({
+        nftOrSft: nft,
+        toOwner: new PublicKey(landData.ownerAddress),
+        fromOwner: this.metaplex.identity().publicKey
+      });
+
+      console.log('Transfer completed:', response.signature);
 
       return {
         success: true,
-        mintAddress: nft.address.toString(),
+        mintAddress: nft.mint.address.toBase58(),
         metadataUri,
-        owner: ownerPublicKey.toString(),
+        owner: landData.ownerAddress,
+        signature: response.signature
       };
     } catch (error) {
       console.error('Error creating land token:', error);
@@ -159,21 +189,24 @@ class NftService {
 
   async listUserNFTs(userAddress) {
     try {
+      console.log('Listing NFTs for address:', userAddress);
+      
       const nfts = await this.metaplex.nfts().findAllByOwner({
         owner: new PublicKey(userAddress)
       });
 
-      const landTokens = nfts.filter(nft => nft.symbol === 'EVG-L');
+      console.log('Found NFTs:', nfts.length);
+      console.log('NFT structure:', JSON.stringify(nfts[0], null, 2));
 
-      const formattedTokens = await Promise.all(landTokens.map(async nft => {
+      const formattedTokens = await Promise.all(nfts.map(async nft => {
         const metadata = await this.getPinataMetadata(nft.uri);
         
         return {
           name: nft.name,
           symbol: nft.symbol,
-          mintAddress: nft.mintAddress.toString(),
-          owner: nft.owner.toString(),
-          updateAuthority: nft.updateAuthority.toString(),
+          mintAddress: nft.mintAddress.toBase58(),
+          updateAuthority: nft.updateAuthorityAddress.toBase58(),
+          uri: nft.uri,
           landData: metadata ? {
             description: metadata.description,
             image: metadata.image,

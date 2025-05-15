@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
 import LandTokenForm from '../components/LandTokenForm';
+import { nftService } from '../services/nftService';
 
 interface LandTokenData {
   carNumber: string;
@@ -16,19 +18,49 @@ interface LandTokenData {
 }
 
 export default function CreateLandTokenPage() {
+  const { publicKey, connected } = useWallet();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (data: LandTokenData) => {
+    if (!connected || !publicKey) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // TODO: Implement actual minting logic
-      console.log('Land token data:', data);
+      setError(null);
+      setSuccess(null);
+
+      const result = await nftService.createLandToken(data, publicKey.toString());
+      
+      if (result.success) {
+        setSuccess(`Land token created successfully! Mint address: ${result.mintAddress}`);
+      } else {
+        throw new Error('Failed to create land token');
+      }
     } catch (error) {
+      setError('Failed to create land token. Please try again.');
       console.error('Error creating land token:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!connected) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-evergreen-700">Connect Your Wallet</h2>
+          <p className="mt-4 text-lg text-evergreen-600">
+            Please connect your wallet to create a land token
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -50,6 +82,18 @@ export default function CreateLandTokenPage() {
             <li>Legal responsibility acceptance</li>
           </ul>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 rounded-lg">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 rounded-lg">
+            <p className="text-green-600">{success}</p>
+          </div>
+        )}
 
         <LandTokenForm 
           onSubmit={handleSubmit}

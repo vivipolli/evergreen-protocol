@@ -1,0 +1,21 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Forest Reserve Area",
+    "description": "Protected forest area in the Amazon region",
+    "area_hectares": 150.5,
+    "vegetation_type": "Tropical Rainforest"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-62.5, -3.2],
+        [-62.4, -3.2],
+        [-62.4, -3.1],
+        [-62.5, -3.1],
+        [-62.5, -3.2]
+      ]
+    ]
+  }
+} 

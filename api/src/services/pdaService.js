@@ -1,5 +1,5 @@
 const { PublicKey } = require('@solana/web3.js');
-const { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } = require('@solana/spl-token');
+const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 
 class PdaService {
   constructor(programId) {
@@ -51,17 +51,36 @@ class PdaService {
   }
 
   // Gera todas as contas necessárias para uma operação
-  async getAllAccounts(owner, usdcMint) {
-    const pdas = await this.getVaultPdas();
-    
-    const tokenAccounts = await this.getTokenAccounts(owner, {
-      usdc: usdcMint,
-      evgS: pdas.evgSMintPda.toString()
-    });
+  async getAllAccounts(walletAddress, usdcMint) {
+    const [vaultPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('vault')],
+      this.programId
+    );
+
+    const [evgSMintPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('evg_s_mint')],
+      this.programId
+    );
+
+    const [treasuryPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('treasury')],
+      this.programId
+    );
+
+    const [feePda] = await PublicKey.findProgramAddress(
+      [Buffer.from('fee')],
+      this.programId
+    );
 
     return {
-      ...pdas,
-      tokenAccounts
+      vaultPda,
+      evgSMintPda,
+      treasuryPda,
+      feePda,
+      tokenAccounts: {
+        usdc: new PublicKey(usdcMint),
+        evgS: evgSMintPda
+      }
     };
   }
 }

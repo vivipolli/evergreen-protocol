@@ -1,17 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const vaultController = require('../controllers/vaultController');
+const vaultService = require('../services/vaultService');
 
-// Inicializa o vault
-router.post('/initialize', vaultController.initializeVault);
+// Get vault statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const stats = await vaultService.getVaultStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching vault stats:', error);
+    res.status(500).json({ error: 'Failed to fetch vault statistics' });
+  }
+});
 
-// Deposita USDC e recebe EVG-S
-router.post('/deposit', vaultController.depositUsdc);
+// Deposit USDC
+router.post('/deposit', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || isNaN(Number(amount))) {
+      return res.status(400).json({ error: 'Valid amount is required' });
+    }
 
-// Compra EVG-L token
-router.post('/purchase', vaultController.purchaseEvgL);
-
-// Distribui rendimentos
-router.post('/distribute', vaultController.distributeEarnings);
+    const result = await vaultService.depositUsdc(Number(amount));
+    res.json(result);
+  } catch (error) {
+    console.error('Error depositing USDC:', error);
+    res.status(500).json({ error: 'Failed to deposit USDC' });
+  }
+});
 
 module.exports = router;

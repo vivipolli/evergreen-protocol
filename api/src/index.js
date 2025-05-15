@@ -1,14 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const { Connection, clusterApiUrl, Keypair } = require('@solana/web3.js');
 const { Metaplex, keypairIdentity } = require('@metaplex-foundation/js');
 const fs = require('fs');
 const path = require('path');
 const landRoutes = require('./routes/landRoutes');
 const vaultRoutes = require('./routes/vaultRoutes');
-
-dotenv.config();
+const nftRoutes = require('./routes/nftRoutes');
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -17,7 +16,15 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const app = express();
-app.use(cors());
+
+// CORS configuration
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Solana connection setup
@@ -33,6 +40,7 @@ metaplex.use(keypairIdentity(wallet));
 // Routes
 app.use('/api/land', landRoutes);
 app.use('/api/vault', vaultRoutes);
+app.use('/api/nft', nftRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

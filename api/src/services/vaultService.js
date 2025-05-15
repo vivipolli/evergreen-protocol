@@ -1,19 +1,32 @@
-const { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } = require('@solana/web3.js');
-const { Program, AnchorProvider } = require('@project-serum/anchor');
+const { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair } = require('@solana/web3.js');
+const { Program, AnchorProvider, BN } = require('@project-serum/anchor');
 const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
 const PdaService = require('./pdaService');
+const fs = require('fs');
 const idl = require('../idl/backend.json');
 
 class VaultService {
   constructor() {
+    // Initialize connection
     this.connection = new Connection(process.env.SOLANA_RPC_URL, 'confirmed');
+    
+    // Load wallet
+    const walletKeypair = JSON.parse(
+      fs.readFileSync(process.env.ANCHOR_WALLET, 'utf-8')
+    );
+    this.wallet = Keypair.fromSecretKey(new Uint8Array(walletKeypair));
+    
+    // Initialize provider
     this.provider = new AnchorProvider(
       this.connection,
-      wallet,
+      this.wallet,
       { commitment: 'confirmed' }
     );
-    this.program = new Program(idl, process.env.PROGRAM_ID, this.provider);
-    this.pdaService = new PdaService(process.env.PROGRAM_ID);
+
+    // Initialize program
+    this.programId = new PublicKey(process.env.VAULT_PROGRAM_ID);
+    this.program = new Program(idl, this.programId, this.provider);
+    this.pdaService = new PdaService(this.programId.toString());
   }
 
   async initializeVault(usdcMint) {
@@ -44,10 +57,30 @@ class VaultService {
     }
   }
 
+  async getVaultStats() {
+    try {
+      const accounts = await this.pdaService.getAllAccounts(
+        this.wallet.publicKey.toString(),
+        process.env.USDC_MINT
+      );
+
+      const vaultAccount = await this.program.account.vault.fetch(accounts.vaultPda);
+
+      return {
+        totalUsdc: vaultAccount.totalUsdc.toString(),
+        totalEvgS: vaultAccount.totalEvgS.toString(),
+        landTokens: []
+      };
+    } catch (error) {
+      console.error('Error fetching vault stats:', error);
+      throw error;
+    }
+  }
+
   async depositUsdc(amount) {
     try {
       const accounts = await this.pdaService.getAllAccounts(
-        this.provider.wallet.publicKey,
+        this.wallet.publicKey.toString(),
         process.env.USDC_MINT
       );
 
@@ -57,14 +90,14 @@ class VaultService {
           vault: accounts.vaultPda,
           userUsdcAccount: accounts.tokenAccounts.usdc,
           vaultUsdcAccount: accounts.tokenAccounts.usdc,
-          evgSMint: accounts.evgSMintPda,
           userEvgSAccount: accounts.tokenAccounts.evgS,
-          user: this.provider.wallet.publicKey,
+          user: this.wallet.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
-      return { success: true, tx };
+      return { success: true, transactionId: tx };
     } catch (error) {
       console.error('Error depositing USDC:', error);
       throw error;

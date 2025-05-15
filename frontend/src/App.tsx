@@ -5,6 +5,8 @@ import CreateLandTokenPage from './pages/CreateLandTokenPage';
 import MarketplacePage from './pages/MarketplacePage';
 import VaultPage from './pages/VaultPage';
 import PortfolioPage from './pages/PortfolioPage';
+import RegistryPage from './pages/RegistryPage';
+import MyNFTsPage from './pages/MyNFTsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -16,9 +18,15 @@ export default function App() {
           <main className="container mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<MarketplacePage />} />
-              <Route path="/create" element={
+              <Route path="/registry" element={<RegistryPage />} />
+              <Route path="/registry/new" element={
                 <ProtectedRoute>
                   <CreateLandTokenPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/registry/my-nfts" element={
+                <ProtectedRoute>
+                  <MyNFTsPage />
                 </ProtectedRoute>
               } />
               <Route path="/vault" element={

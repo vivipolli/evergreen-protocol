@@ -6,7 +6,7 @@ export default function Navbar() {
   const location = useLocation();
   const { connected } = useWallet();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
     <nav className="bg-evergreen-700 shadow-eco">
@@ -21,14 +21,14 @@ export default function Navbar() {
             {connected && (
               <>
                 <Link
-                  to="/create"
+                  to="/registry"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    isActive('/create')
+                    isActive('/registry')
                       ? 'bg-earth-500 text-white'
                       : 'text-white hover:bg-earth-500/20'
                   }`}
                 >
-                  Create Token
+                  Registry
                 </Link>
                 <Link
                   to="/vault"
