@@ -1,5 +1,3 @@
-import { PublicKey } from '@solana/web3.js';
-
 interface LandTokenData {
   carNumber: string;
   carStatus: string;
@@ -36,7 +34,7 @@ interface LandToken {
   } | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class NftService {
   async createLandToken(data: LandTokenData, ownerAddress: string): Promise<{ success: boolean; mintAddress: string }> {
