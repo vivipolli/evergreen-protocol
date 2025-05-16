@@ -6,14 +6,12 @@ mod getrandom_backend;
 
 declare_id!("FrhgU1YQivVRKdbW9iFGfBiVYLSkuCuM8ZyjXiMrtNF1");
 
-// Constantes para taxas
 const SALE_FEE_BASIS_POINTS: u64 = 250; // 2.5%
 
 #[program]
 pub mod backend {
     use super::*;
 
-    // Inicializa o vault e cria o token EVG-S
     pub fn initialize_vault(
         ctx: Context<InitializeVault>,
         usdc_mint: Pubkey,
@@ -28,16 +26,13 @@ pub mod backend {
         Ok(())
     }
 
-    // Deposita USDC e recebe EVG-S
     pub fn deposit_usdc(
         ctx: Context<DepositUsdc>,
         amount: u64,
     ) -> Result<()> {
-        // Get vault_info first
         let vault_info = ctx.accounts.vault.to_account_info();
         let vault = &mut ctx.accounts.vault;
         
-        // Transferir USDC para o vault
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -50,10 +45,8 @@ pub mod backend {
             amount,
         )?;
 
-        // Calcular quantidade de EVG-S (1:1 para simplificar)
         let evg_s_amount = amount;
 
-        // Emitir EVG-S tokens
         token::mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -70,32 +63,26 @@ pub mod backend {
             evg_s_amount,
         )?;
 
-        // Atualizar supply total
         vault.total_evg_s_supply += evg_s_amount;
 
         Ok(())
     }
 
-    // Compra EVG-L token
     pub fn purchase_evg_l(
         ctx: Context<PurchaseEvgL>,
         price: u64,
     ) -> Result<()> {
-        // Get vault_info first
         let vault_info = ctx.accounts.vault.to_account_info();
         let vault = &mut ctx.accounts.vault;
         
-        // Validar se o vault tem USDC suficiente
         require!(
             ctx.accounts.vault_usdc_account.amount >= price,
             VaultError::InsufficientFunds
         );
 
-        // Calcula taxas
         let sale_fee = (price * SALE_FEE_BASIS_POINTS) / 10000;
         let seller_amount = price - sale_fee;
 
-        // Transfere USDC para o vendedor
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -112,14 +99,12 @@ pub mod backend {
             seller_amount,
         )?;
 
-        // Atualiza contadores do vault
         vault.total_evg_l_tokens += 1;
 
         Ok(())
     }
 }
 
-// Erros personalizados
 #[error_code]
 pub enum VaultError {
     #[msg("Insufficient funds in vault")]
