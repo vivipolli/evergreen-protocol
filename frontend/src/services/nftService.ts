@@ -3,6 +3,7 @@ interface LandTokenData {
   carStatus: string;
   propertyName: string;
   geoJson: File | null;
+  image: File | null;
   commitmentHash: string;
   environmentalMetadata: {
     vegetationCover: string;
@@ -16,8 +17,8 @@ interface LandToken {
   name: string;
   symbol: string;
   mintAddress: string;
-  owner: string;
   updateAuthority: string;
+  uri: string;
   landData: {
     description: string;
     image: string;
@@ -26,11 +27,14 @@ interface LandToken {
       value: string | boolean;
     }>;
     vegetationCoverage: string;
-    hasApp: boolean;
-    appDetails: string;
-    carNumber: string;
-    carStatus: string;
-    commitmentHash: string;
+    waterBodies?: string;
+    springs?: string;
+    carRegistry?: string;
+    carNumber?: string;
+    carStatus?: string;
+    hasApp?: boolean;
+    appDetails?: string;
+    commitmentHash?: string;
   } | null;
 }
 
@@ -42,6 +46,11 @@ class NftService {
       let geoJsonContent = null;
       if (data.geoJson) {
         geoJsonContent = await data.geoJson.text();
+      }
+
+      let imageContent = null;
+      if (data.image) {
+        imageContent = await data.image.text();
       }
 
       const response = await fetch(`${API_BASE_URL}/api/nft/create`, {
@@ -56,8 +65,10 @@ class NftService {
             carStatus: data.carStatus,
             propertyName: data.propertyName,
             geoJson: geoJsonContent,
+            image: imageContent,
             commitmentHash: data.commitmentHash,
             environmentalMetadata: data.environmentalMetadata,
+            symbol: 'EVGL',
           },
         }),
       });

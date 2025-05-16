@@ -19,7 +19,7 @@ export default function LandTokenCard({
   owner,
 }: LandTokenCardProps) {
   return (
-    <div className="card hover:shadow-eco-lg transition-all duration-300">
+    <div className="card hover:shadow-eco-lg transition-all duration-300 bg-gray-300">
       <div className="relative h-48 mb-4">
         <img
           src={image}

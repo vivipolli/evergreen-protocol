@@ -30,10 +30,22 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }));
+      if (name === 'termsAccepted') {
+        setFormData(prev => ({ ...prev, termsAccepted: checked }));
+      } else if (name === 'hasApp') {
+        setFormData(prev => ({
+          ...prev,
+          environmentalMetadata: {
+            ...prev.environmentalMetadata,
+            hasApp: checked,
+          },
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: checked
+        }));
+      }
     } else if (name.startsWith('environmentalMetadata.')) {
       const field = name.split('.')[1];
       setFormData(prev => ({
@@ -52,11 +64,14 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({
-        ...prev,
-        geoJson: e.target.files![0]
-      }));
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      if (name === 'geoJson') {
+        setFormData(prev => ({
+          ...prev,
+          geoJson: files[0]
+        }));
+      }
     }
   };
 
@@ -106,23 +121,48 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
           required
         />
         <div>
-          <label htmlFor="geoJson" className="block text-sm font-medium text-evergreen-700">
-            Property Area (GeoJSON)
+          <label className="block text-sm font-medium text-evergreen-700 mb-2">
+            GeoJSON File
           </label>
-          <input
-            type="file"
-            id="geoJson"
-            name="geoJson"
-            accept=".geojson,.json"
-            onChange={handleFileChange}
-            required
-            className="mt-1 block w-full h-10 px-3 py-2 text-sm text-evergreen-600 rounded-md
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-md file:border-0
-              file:text-sm file:font-semibold
-              file:bg-evergreen-50 file:text-evergreen-700
-              hover:file:bg-evergreen-100"
-          />
+          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-evergreen-300 border-dashed rounded-md">
+            <div className="space-y-1 text-center">
+              <svg
+                className="mx-auto h-12 w-12 text-evergreen-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+                aria-hidden="true"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <div className="flex text-sm text-evergreen-600">
+                <label
+                  htmlFor="geoJson"
+                  className="relative cursor-pointer bg-white rounded-md font-medium text-evergreen-600 hover:text-evergreen-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-evergreen-500"
+                >
+                  <span>Upload GeoJSON</span>
+                  <input
+                    id="geoJson"
+                    name="geoJson"
+                    type="file"
+                    accept=".geojson,.json"
+                    className="sr-only"
+                    onChange={handleFileChange}
+                    required
+                  />
+                </label>
+                <p className="pl-1">or drag and drop</p>
+              </div>
+              <p className="text-xs text-evergreen-500">
+                GeoJSON file up to 10MB
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -187,10 +227,10 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
           />
         </div>
         <div>
-          <label className="flex items-center space-x-2">
+          <label className="flex items-start space-x-2">
             <input
               type="checkbox"
-              name="environmentalMetadata.hasApp"
+              name="hasApp"
               checked={formData.environmentalMetadata.hasApp}
               onChange={handleChange}
               className="rounded border-2 border-evergreen-300 text-evergreen-600 focus:ring-evergreen-500"

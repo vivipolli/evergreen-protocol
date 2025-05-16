@@ -37,9 +37,9 @@ class NftService {
       // Create metadata
       const metadata = {
         name: landData.propertyName,
-        symbol: 'EVG-L',
+        symbol: landData.symbol || 'EVGL',
         description: 'Land token representing forest preservation commitment',
-        image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
+        image: landData.image || 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
         attributes: [
           {
             trait_type: 'CAR Number',
@@ -69,7 +69,7 @@ class NftService {
         properties: {
           files: [
             {
-              uri: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
+              uri: landData.image || 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
               type: 'image/png',
             },
             {
@@ -91,6 +91,7 @@ class NftService {
       const { nft } = await this.metaplex.nfts().create({
         uri: metadataUri,
         name: landData.propertyName,
+        symbol: landData.symbol || 'EVGL',
         sellerFeeBasisPoints: 0,
         updateAuthority: this.metaplex.identity(),
         mintAuthority: this.metaplex.identity(),

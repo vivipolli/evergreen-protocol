@@ -62,7 +62,7 @@ export default function MarketplacePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-evergreen-400 mb-2">Land Token Marketplace</h1>
         <p className="text-gray-300">
-          Browse and invest in land tokens from various ecosystems.
+          Browse and discover verified land tokens (EVG-L) with complete legal documentation and environmental metrics.
         </p>
       </div>
 
@@ -72,34 +72,17 @@ export default function MarketplacePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockTokens.map(token => (
-          <div key={token.id} className="bg-[#0F2A0F] rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
-            <div className="relative h-48">
-              <img
-                src={token.image}
-                alt={token.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A1A0A] to-transparent opacity-60"></div>
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-evergreen-400 mb-2">{token.name}</h3>
-              <p className="text-gray-300 mb-4">{token.description}</p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-400">Price</p>
-                  <p className="text-lg font-semibold text-evergreen-400">${token.price.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Area</p>
-                  <p className="text-lg font-semibold text-evergreen-400">{token.hectares} ha</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">{token.vegetation}</span>
-                <span className="text-sm text-gray-400">{token.owner}</span>
-              </div>
-            </div>
-          </div>
+          <LandTokenCard
+            key={token.id}
+            id={token.id}
+            name={token.name}
+            description={token.description}
+            image={token.image}
+            price={token.price}
+            hectares={token.hectares}
+            vegetation={token.vegetation}
+            owner={token.owner}
+          />
         ))}
       </div>
     </div>

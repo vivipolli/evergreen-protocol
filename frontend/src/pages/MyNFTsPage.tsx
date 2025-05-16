@@ -21,9 +21,14 @@ interface LandToken {
       value: string | boolean;
     }>;
     vegetationCoverage: string;
-    waterBodies: string;
-    springs: string;
-    carRegistry: string;
+    waterBodies?: string;
+    springs?: string;
+    carRegistry?: string;
+    carNumber?: string;
+    carStatus?: string;
+    hasApp?: boolean;
+    appDetails?: string;
+    commitmentHash?: string;
   } | null;
 }
 
@@ -53,6 +58,10 @@ export default function MyNFTsPage() {
     }
   };
 
+  const getSolanaExplorerLink = (mintAddress: string) => {
+    return `https://explorer.solana.com/address/${mintAddress}?cluster=devnet`;
+  };
+
   if (!connected) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -68,8 +77,8 @@ export default function MyNFTsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-3xl font-bold text-evergreen-700 mb-8">My Land Tokens</h1>
+      <div className="rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold text-gray-200 mb-8">My Land Tokens</h1>
 
         {isLoading ? (
           <div className="text-center py-12">
@@ -102,31 +111,31 @@ export default function MyNFTsPage() {
                 )}
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-evergreen-700 mb-2">{nft.name}</h3>
+                  <p className="text-sm text-evergreen-600 mb-4">{nft.landData?.description}</p>
                   {nft.landData && (
                     <div className="space-y-2">
-                      <p className="text-sm text-evergreen-600">
-                        <span className="font-medium">CAR Registry:</span> {nft.landData.carRegistry}
-                      </p>
-                      <p className="text-sm text-evergreen-600">
-                        <span className="font-medium">Vegetation Coverage:</span> {nft.landData.vegetationCoverage}%
-                      </p>
-                      <p className="text-sm text-evergreen-600">
-                        <span className="font-medium">Water Bodies:</span> {nft.landData.waterBodies}
-                      </p>
-                      <p className="text-sm text-evergreen-600">
-                        <span className="font-medium">Springs:</span> {nft.landData.springs}
-                      </p>
-                      {nft.landData.attributes.find(attr => attr.trait_type === 'Ongoing Projects')?.value && (
-                        <p className="text-sm text-evergreen-600">
-                          <span className="font-medium">Ongoing Projects:</span> {nft.landData.attributes.find(attr => attr.trait_type === 'Ongoing Projects')?.value}
+                      {nft.landData.attributes.map((attr, index) => (
+                        <p key={index} className="text-sm text-evergreen-600">
+                          <span className="font-medium">{attr.trait_type}:</span>{' '}
+                          {typeof attr.value === 'boolean' ? (attr.value ? 'Yes' : 'No') : attr.value}
                         </p>
-                      )}
+                      ))}
                     </div>
                   )}
                   <div className="mt-4 pt-4 border-t border-evergreen-200">
-                    <p className="text-xs text-evergreen-500 truncate">
-                      Token: {nft.mintAddress}
-                    </p>
+                    <div className="flex flex-col space-y-2">
+                      <p className="text-xs text-evergreen-500 truncate">
+                        Token: {nft.mintAddress}
+                      </p>
+                      <a
+                        href={getSolanaExplorerLink(nft.mintAddress)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-evergreen-600 hover:text-evergreen-700 underline"
+                      >
+                        View on Solana Explorer
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

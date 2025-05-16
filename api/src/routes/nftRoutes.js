@@ -6,7 +6,8 @@ const nftService = require('../services/nftService');
 router.post('/create', express.json(), async (req, res) => {
   try {
     const { landData } = req.body;
-    const result = await nftService.createLandToken(landData);
+    const { symbol = 'EVGL' } = landData; // Default symbol if not provided
+    const result = await nftService.createLandToken({ ...landData, symbol });
     res.json(result);
   } catch (error) {
     console.error('Error creating land token:', error);
