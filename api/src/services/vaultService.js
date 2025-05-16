@@ -43,8 +43,40 @@ class VaultService {
         if (!privateKeyString) {
           throw new Error('WALLET_PRIVATE_KEY environment variable is not set');
         }
-        const privateKeyArray = privateKeyString.split(',').map(num => parseInt(num));
-        keypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+        
+        console.log('Private key string length:', privateKeyString.length);
+        
+        // Parse the private key from environment variable
+        let privateKey;
+        try {
+          privateKey = JSON.parse(privateKeyString);
+          console.log('Private key parsed successfully, length:', privateKey.length);
+        } catch (parseError) {
+          console.error('Error parsing private key JSON:', parseError);
+          throw new Error('Invalid private key format. Must be a valid JSON array.');
+        }
+        
+        // Validate private key array
+        if (!Array.isArray(privateKey)) {
+          throw new Error('Private key must be an array of numbers');
+        }
+        
+        if (privateKey.length !== 64) {
+          throw new Error(`Invalid private key length. Expected 64 bytes, got ${privateKey.length}`);
+        }
+        
+        // Validate all elements are numbers
+        if (!privateKey.every(num => typeof num === 'number' && !isNaN(num))) {
+          throw new Error('Private key array must contain only numbers');
+        }
+        
+        // Convert to Uint8Array
+        const privateKeyUint8 = new Uint8Array(privateKey);
+        console.log('Private key converted to Uint8Array, length:', privateKeyUint8.length);
+        
+        // Create keypair
+        keypair = Keypair.fromSecretKey(privateKeyUint8);
+        console.log('Keypair created successfully');
       } else {
         // In development, use wallet file
         const walletPath = process.env.ANCHOR_WALLET || '/home/vivi/.config/solana/id.json';
