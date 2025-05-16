@@ -64,7 +64,7 @@ export default function CreateLandTokenPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-eco p-6">
+      <div className="bg-gray-200 rounded-lg shadow-eco p-6">
         <h1 className="text-2xl font-bold text-evergreen-700 mb-6">
           Create Land Token (EVG-L)
         </h1>

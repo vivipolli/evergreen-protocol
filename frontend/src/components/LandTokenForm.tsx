@@ -183,7 +183,7 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
             value={formData.environmentalMetadata.description}
             onChange={handleChange}
             rows={3}
-            className="mt-1 block w-full px-3 py-2 rounded-md border-2 border-evergreen-200 shadow-sm focus:border-evergreen-500 focus:ring-evergreen-500"
+            className="bg-gray-200 mt-1 block w-full px-3 py-2 rounded-md border-2 border-evergreen-200 shadow-sm focus:border-evergreen-500 focus:ring-evergreen-500"
           />
         </div>
         <div>

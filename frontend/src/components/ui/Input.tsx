@@ -21,7 +21,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         </label>
         <input
           ref={ref}
-          className={`mt-1 block w-full h-10 px-3 py-2 rounded-md border-2 border-evergreen-200 
+          className={`bg-gray-200 mt-1 block w-full h-10 px-3 py-2 rounded-md border-2 border-evergreen-200 
             shadow-sm focus:border-evergreen-500 focus:ring-evergreen-500
             disabled:opacity-50 disabled:bg-evergreen-50
             ${error ? 'border-red-500' : ''}
