@@ -1,10 +1,11 @@
 const { Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Keypair } = require('@solana/web3.js');
 const { Program, AnchorProvider, BN, Wallet, workspace } = require('@project-serum/anchor');
-const { TOKEN_PROGRAM_ID } = require('@solana/spl-token');
+const { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } = require('@solana/spl-token');
 const PdaService = require('./pdaService');
 const fs = require('fs');
 const path = require('path');
 const { Transaction } = require('@solana/web3.js');
+const idl = require('../idl/backend.json');
 
 class VaultService {
   constructor() {
@@ -63,12 +64,6 @@ class VaultService {
     try {
       this.programId = new PublicKey('FrhgU1YQivVRKdbW9iFGfBiVYLSkuCuM8ZyjXiMrtNF1');
       console.log('Program ID:', this.programId.toString());
-      
-      // Load IDL
-      const idlPath = require.resolve('../idl/backend.json');
-      console.log('Loading IDL from:', idlPath);
-      const idl = require(idlPath);
-      console.log('IDL loaded:', JSON.stringify(idl, null, 2));
       
       // Create program with IDL
       this.program = new Program(idl, this.programId, this.provider);
