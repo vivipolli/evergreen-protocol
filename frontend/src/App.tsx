@@ -5,7 +5,6 @@ import CreateLandTokenPage from './pages/CreateLandTokenPage';
 import MarketplacePage from './pages/MarketplacePage';
 import VaultPage from './pages/VaultPage';
 import PortfolioPage from './pages/PortfolioPage';
-import RegistryPage from './pages/RegistryPage';
 import MyNFTsPage from './pages/MyNFTsPage';
 import WhitePaperPage from './pages/WhitePaperPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -20,7 +19,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<MarketplacePage />} />
               <Route path="/whitepaper" element={<WhitePaperPage />} />
-              <Route path="/registry" element={<RegistryPage />} />
               <Route path="/registry/new" element={
                 <ProtectedRoute>
                   <CreateLandTokenPage />
