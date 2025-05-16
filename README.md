@@ -80,8 +80,33 @@ Evergreen Protocol is a decentralized platform that tokenizes real-world land as
 - **Vault Program** (Smart Contracts)
   - USDC deposit and withdrawal
   - EVG-S token minting and burning
-  - Land token acquisition and management
-  - Fee collection and distribution
+
+### Geolocation Example
+```json
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Sample Land Property",
+    "area": "1000",
+    "unit": "hectares",
+    "vegetation": "Amazon Rainforest",
+    "water_bodies": ["River X", "Lake Y"],
+    "car_registry": "SP-123456789"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-54.123456, -2.123456],
+        [-54.123456, -2.234567],
+        [-54.234567, -2.234567],
+        [-54.234567, -2.123456],
+        [-54.123456, -2.123456]
+      ]
+    ]
+  }
+}
+```
 
 ### API Endpoints
 

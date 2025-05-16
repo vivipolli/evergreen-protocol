@@ -236,7 +236,7 @@ export default function LandTokenForm({ onSubmit, isSubmitting }: LandTokenFormP
               className="rounded border-2 border-evergreen-300 text-evergreen-600 focus:ring-evergreen-500"
             />
             <span className="text-sm font-medium text-evergreen-700">
-              Has Permanent Preservation Area (APP)
+              According to Brazil’s Forest Code (Law No. 12.651/2012), this property has preserved its legally required Permanent Preservation Areas (APP) and Legal Reserve (RL)
             </span>
           </label>
         </div>
