@@ -1,9 +1,9 @@
 {
   "version": "0.1.0",
-  "name": "evergreen_vault",
+  "name": "backend",
   "instructions": [
     {
-      "name": "initializeVault",
+      "name": "initialize_vault",
       "accounts": [
         {
           "name": "vault",
@@ -16,40 +16,14 @@
           "isSigner": true
         },
         {
-          "name": "systemProgram",
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryAccount",
           "isMut": false,
           "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "depositUsdc",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userUsdcAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultUsdcAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userEvgSAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "user",
-          "isMut": true,
-          "isSigner": true
         },
         {
           "name": "tokenProgram",
@@ -60,12 +34,17 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "amount",
-          "type": "u64"
+          "name": "usdc_mint",
+          "type": "publicKey"
         }
       ]
     }
@@ -81,12 +60,20 @@
             "type": "publicKey"
           },
           {
-            "name": "totalUsdc",
+            "name": "usdc_mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "total_evg_s_supply",
             "type": "u64"
           },
           {
-            "name": "totalEvgS",
+            "name": "total_evg_l_tokens",
             "type": "u64"
+          },
+          {
+            "name": "treasury_account",
+            "type": "publicKey"
           }
         ]
       }
@@ -96,7 +83,10 @@
     {
       "code": 6000,
       "name": "InsufficientFunds",
-      "msg": "Insufficient funds for deposit"
+      "msg": "Insufficient funds in vault"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FrhgU1YQivVRKdbW9iFGfBiVYLSkuCuM8ZyjXiMrtNF1"
+  }
 } 

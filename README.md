@@ -3,7 +3,7 @@
 ## Overview
 Evergreen Protocol is a decentralized platform that tokenizes real-world land assets (RWAs) to promote environmental preservation while providing financial opportunities. The protocol enables landowners to tokenize their properties as NFTs (EVG-L) and investors to participate through a vault system (EVG-S).
 
-## Architecture
+## Current Implementation (Hackathon)
 
 ### Smart Contracts (Anchor)
 - **Land Token (EVG-L)**: NFT representing real land assets
@@ -12,31 +12,29 @@ Evergreen Protocol is a decentralized platform that tokenizes real-world land as
   - Transferable tokens
 
 - **Vault System**
-  - Manages USDC deposits and EVG-S token distribution
-  - Handles land token purchases
-  - Distributes earnings to EVG-S holders
-  - Fee structure:
+  - USDC deposits and EVG-S token distribution (1:1 ratio)
+  - Basic land token purchases
+  - Simple fee structure:
     - Minting: 2%
     - Sales: 2.5%
-    - Distribution: 0.5%
 
 ### Backend (Node.js)
 - **API Endpoints**
   - Land token creation and management
-  - Vault operations (deposits, purchases, distributions)
+  - Basic vault operations (deposits, purchases)
   - IPFS integration for metadata storage
 
 - **Services**
-  - NFT Service: Handles land token creation and transfers
-  - Vault Service: Manages vault operations and token distributions
-  - IPFS Service: Stores land images and metadata
+  - NFT Service: Land token creation and transfers
+  - Vault Service: Basic vault operations
+  - IPFS Service: Metadata storage via Pinata
 
 ### Frontend (Next.js)
-- User authentication and wallet connection
+- Wallet connection (Phantom)
 - Land token creation interface
 - Vault participation dashboard
 - Portfolio management
-- Transaction history
+- Basic transaction history
 
 ## Tokenomics
 
@@ -48,11 +46,47 @@ Evergreen Protocol is a decentralized platform that tokenizes real-world land as
 
 ### EVG-S (Vault Token)
 - Represents share in the vault
-- Earns from land token sales and distributions
-- Used for governance (future implementation)
+- 1:1 ratio with USDC deposits
+- Basic governance rights
 - Backed by USDC deposits
 
-## Governance (Future Implementation)
+## Future Implementation Plans
+
+### Smart Contracts
+- **Enhanced Land Token**
+  - CAR registry integration
+  - Environmental impact tracking
+  - Legal compliance metadata
+  - Automated verification system
+
+- **Advanced Vault System**
+  - Dynamic EVG-S pricing based on vault value
+  - Automated earnings distribution
+  - Advanced fee structure
+  - Treasury management
+  - Distribution fee: 0.5%
+
+### Backend
+- **Enhanced API**
+  - Real-time price feeds
+  - Advanced analytics
+  - Automated compliance checks
+  - Integration with environmental databases
+
+- **Services**
+  - Advanced NFT Service with verification
+  - Sophisticated Vault Service with distributions
+  - Enhanced IPFS Service with redundancy
+  - Environmental impact tracking service
+
+### Frontend
+- Advanced analytics dashboard
+- Environmental impact visualization
+- Governance interface
+- Advanced portfolio management
+- Real-time market data
+
+## Governance (Future)
 
 ### Vault DAO
 - Land acquisition decisions
@@ -80,3 +114,66 @@ Evergreen Protocol is a decentralized platform that tokenizes real-world land as
 - **Storage**: IPFS (Pinata)
 - **Blockchain**: Solana
 - **Tokens**: SPL Tokens, Metaplex
+
+## Getting Started
+
+### Prerequisites
+- Node.js 16+
+- Rust 1.70+
+- Solana CLI
+- Anchor Framework
+
+### Development Setup
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   # Backend
+   cd backend
+   yarn install
+
+   # Frontend
+   cd frontend
+   yarn install
+   ```
+3. Configure environment variables:
+   ```bash
+   # Backend (.env)
+   VAULT_KEYPAIR_PATH=./vault-keypair.json
+   VAULT_PUBKEY=<public_key_from_vault_keypair>
+   USDC_MINT_ADDRESS=<devnet_usdc_mint_address>
+   ```
+
+4. Setup Vault Wallet:
+   ```bash
+   # Create a new keypair for the vault
+   solana-keygen new -o vault-keypair.json
+   
+   # Get the public key
+   solana-keygen pubkey vault-keypair.json
+   
+   # Fund the vault wallet with SOL (devnet)
+   solana airdrop 2 <vault_public_key> --url devnet
+   ```
+
+5. Initialize the Vault:
+   ```bash
+   # Deploy the program
+   anchor deploy
+
+   # Initialize vault (using the frontend or API)
+   # The vault wallet will be used as the authority
+   ```
+
+6. Start development servers:
+   ```bash
+   # Backend
+   yarn dev
+
+   # Frontend
+   yarn dev
+   ```
+
+### Testing
+- Smart Contracts: `anchor test`
+- Backend: `yarn test`
+- Frontend: `yarn test`

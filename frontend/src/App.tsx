@@ -7,17 +7,19 @@ import VaultPage from './pages/VaultPage';
 import PortfolioPage from './pages/PortfolioPage';
 import RegistryPage from './pages/RegistryPage';
 import MyNFTsPage from './pages/MyNFTsPage';
+import WhitePaperPage from './pages/WhitePaperPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
   return (
     <WalletContextProvider>
       <Router>
-        <div className="min-h-screen bg-evergreen-50">
+        <div className="min-h-screen bg-[#0A1A0A]">
           <Navbar />
           <main className="container mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<MarketplacePage />} />
+              <Route path="/whitepaper" element={<WhitePaperPage />} />
               <Route path="/registry" element={<RegistryPage />} />
               <Route path="/registry/new" element={
                 <ProtectedRoute>

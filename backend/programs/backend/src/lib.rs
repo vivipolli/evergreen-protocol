@@ -2,20 +2,16 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use anchor_spl::associated_token::AssociatedToken;
 
-declare_id!("BrZ7wezEyEWncfSc2vu9dRs1yZP9uw9M7atpki9ovnL1");
+mod getrandom_backend;
+
+declare_id!("FrhgU1YQivVRKdbW9iFGfBiVYLSkuCuM8ZyjXiMrtNF1");
 
 // Constantes para taxas
-const MINT_FEE_BASIS_POINTS: u64 = 200; // 2%
 const SALE_FEE_BASIS_POINTS: u64 = 250; // 2.5%
-const DISTRIBUTION_FEE_BASIS_POINTS: u64 = 50; // 0.5%
 
 #[program]
 pub mod backend {
     use super::*;
-
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        Ok(())
-    }
 
     // Inicializa o vault e cria o token EVG-S
     pub fn initialize_vault(
@@ -28,21 +24,6 @@ pub mod backend {
         vault.total_evg_s_supply = 0;
         vault.total_evg_l_tokens = 0;
         vault.treasury_account = ctx.accounts.treasury_account.key();
-        vault.fee_account = ctx.accounts.fee_account.key();
-
-        // Inicializa o token EVG-S
-        token::initialize_mint(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                token::InitializeMint {
-                    mint: ctx.accounts.evg_s_mint.to_account_info(),
-                    rent: ctx.accounts.rent.to_account_info(),
-                },
-            ),
-            9, // 9 casas decimais como USDC
-            ctx.accounts.authority.key(),
-            Some(ctx.accounts.authority.key()),
-        )?;
 
         Ok(())
     }
@@ -52,6 +33,8 @@ pub mod backend {
         ctx: Context<DepositUsdc>,
         amount: u64,
     ) -> Result<()> {
+        // Get vault_info first
+        let vault_info = ctx.accounts.vault.to_account_info();
         let vault = &mut ctx.accounts.vault;
         
         // Transferir USDC para o vault
@@ -67,18 +50,22 @@ pub mod backend {
             amount,
         )?;
 
-        // Calcular quantidade de EVG-S baseado no valor total do vault
-        let evg_s_amount = calculate_evg_s_amount(amount, vault)?;
+        // Calcular quantidade de EVG-S (1:1 para simplificar)
+        let evg_s_amount = amount;
 
         // Emitir EVG-S tokens
         token::mint_to(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 token::MintTo {
-                    mint: ctx.accounts.evg_s_mint.to_account_info(),
-                    to: ctx.accounts.user_evg_s_account.to_account_info(),
-                    authority: ctx.accounts.vault.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: ctx.accounts.user_token_account.to_account_info(),
+                    authority: vault_info,
                 },
+                &[&[
+                    b"vault".as_ref(),
+                    &[*ctx.bumps.get("vault").unwrap()],
+                ]],
             ),
             evg_s_amount,
         )?;
@@ -94,6 +81,8 @@ pub mod backend {
         ctx: Context<PurchaseEvgL>,
         price: u64,
     ) -> Result<()> {
+        // Get vault_info first
+        let vault_info = ctx.accounts.vault.to_account_info();
         let vault = &mut ctx.accounts.vault;
         
         // Validar se o vault tem USDC suficiente
@@ -108,28 +97,19 @@ pub mod backend {
 
         // Transfere USDC para o vendedor
         token::transfer(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
                     from: ctx.accounts.vault_usdc_account.to_account_info(),
                     to: ctx.accounts.seller_usdc_account.to_account_info(),
-                    authority: ctx.accounts.vault.to_account_info(),
+                    authority: vault_info,
                 },
+                &[&[
+                    b"vault".as_ref(),
+                    &[*ctx.bumps.get("vault").unwrap()],
+                ]],
             ),
             seller_amount,
-        )?;
-
-        // Transfere taxa para o vault
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
-                    from: ctx.accounts.vault_usdc_account.to_account_info(),
-                    to: ctx.accounts.vault_fee_account.to_account_info(),
-                    authority: ctx.accounts.vault.to_account_info(),
-                },
-            ),
-            sale_fee,
         )?;
 
         // Atualiza contadores do vault
@@ -137,65 +117,6 @@ pub mod backend {
 
         Ok(())
     }
-
-    // Distribui rendimentos para holders de EVG-S
-    pub fn distribute_earnings(
-        ctx: Context<DistributeEarnings>,
-        amount: u64,
-    ) -> Result<()> {
-        let vault = &mut ctx.accounts.vault;
-        
-        // Calcula taxa de distribuição
-        let distribution_fee = (amount * DISTRIBUTION_FEE_BASIS_POINTS) / 10000;
-        let distribution_amount = amount - distribution_fee;
-
-        // Transfere taxa para o tesouro
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
-                    from: ctx.accounts.vault_usdc_account.to_account_info(),
-                    to: ctx.accounts.treasury_account.to_account_info(),
-                    authority: ctx.accounts.vault.to_account_info(),
-                },
-            ),
-            distribution_fee,
-        )?;
-
-        // Calcula distribuição por token EVG-S
-        let evg_s_supply = vault.total_evg_s_supply;
-        let amount_per_token = distribution_amount / evg_s_supply;
-
-        // Distribui para todos os holders de EVG-S
-        // (Implementação simplificada - na prática precisaria de um loop)
-        token::transfer(
-            CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
-                    from: ctx.accounts.vault_usdc_account.to_account_info(),
-                    to: ctx.accounts.holder_account.to_account_info(),
-                    authority: ctx.accounts.vault.to_account_info(),
-                },
-            ),
-            amount_per_token,
-        )?;
-
-        Ok(())
-    }
-}
-
-// Função auxiliar para calcular quantidade de EVG-S
-fn calculate_evg_s_amount(usdc_amount: u64, vault: &Account<Vault>) -> Result<u64> {
-    if vault.total_evg_s_supply == 0 {
-        // Primeiro depósito: 1:1
-        return Ok(usdc_amount);
-    }
-
-    // Calcular baseado no valor total do vault
-    let total_value = vault.total_evg_l_tokens * 1000000; // Valor médio por NFT em USDC
-    let evg_s_amount = (usdc_amount * vault.total_evg_s_supply) / total_value;
-    
-    Ok(evg_s_amount)
 }
 
 // Erros personalizados
@@ -207,9 +128,6 @@ pub enum VaultError {
     InvalidAmount,
 }
 
-#[derive(Accounts)]
-pub struct Initialize {}
-
 #[account]
 pub struct Vault {
     pub authority: Pubkey,
@@ -217,19 +135,24 @@ pub struct Vault {
     pub total_evg_s_supply: u64,
     pub total_evg_l_tokens: u64,
     pub treasury_account: Pubkey,
-    pub fee_account: Pubkey,
 }
 
 #[derive(Accounts)]
 pub struct InitializeVault<'info> {
-    #[account(init, payer = authority, space = 8 + 32 + 32 + 8 + 8 + 32 + 32)]
+    #[account(init, payer = authority, space = 8 + 32 + 32 + 8 + 8 + 32, seeds = [b"vault"], bump)]
     pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(mut)]
-    pub evg_s_mint: Account<'info, Mint>,
+    #[account(
+        init,
+        payer = authority,
+        seeds = [b"evg_s_mint"],
+        bump,
+        mint::decimals = 9,
+        mint::authority = vault,
+    )]
+    pub mint: Account<'info, Mint>,
     pub treasury_account: AccountInfo<'info>,
-    pub fee_account: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
@@ -237,42 +160,27 @@ pub struct InitializeVault<'info> {
 
 #[derive(Accounts)]
 pub struct DepositUsdc<'info> {
-    #[account(mut)]
+    #[account(mut, seeds = [b"vault"], bump)]
     pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub user_usdc_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub vault_usdc_account: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub evg_s_mint: Account<'info, Mint>,
+    pub mint: Account<'info, Mint>,
     #[account(mut)]
-    pub user_evg_s_account: Account<'info, TokenAccount>,
+    pub user_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
-pub struct DistributeEarnings<'info> {
-    #[account(mut)]
-    pub vault: Account<'info, Vault>,
-    #[account(mut)]
-    pub vault_usdc_account: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub treasury_account: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub holder_account: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
 pub struct PurchaseEvgL<'info> {
-    #[account(mut)]
+    #[account(mut, seeds = [b"vault"], bump)]
     pub vault: Account<'info, Vault>,
     #[account(mut)]
     pub vault_usdc_account: Account<'info, TokenAccount>,
-    #[account(mut)]
-    pub vault_fee_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub seller_usdc_account: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,

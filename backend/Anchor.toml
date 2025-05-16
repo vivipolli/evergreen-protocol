@@ -1,14 +1,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-backend = "BrZ7wezEyEWncfSc2vu9dRs1yZP9uw9M7atpki9ovnL1"
+[programs.devnet]
+backend = "FrhgU1YQivVRKdbW9iFGfBiVYLSkuCuM8ZyjXiMrtNF1"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "/home/vivi/.config/solana/id.json"
 
 [scripts]

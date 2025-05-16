@@ -17,3 +17,8 @@ default = []
 
 [dependencies]
 anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+getrandom = { version = "0.2.10", features = ["custom"] }
+
+[target.bpfel-unknown-unknown.dependencies]
+getrandom = { version = "0.2.10", features = ["custom"] }

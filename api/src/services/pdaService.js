@@ -6,80 +6,79 @@ class PdaService {
     this.programId = new PublicKey(programId);
   }
 
-  // Gera PDAs para o vault
-  async getVaultPdas() {
-    const [vaultPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('vault')],
-      this.programId
-    );
-
-    const [evgSMintPda] = await PublicKey.findProgramAddress(
+  async getEvgSMintPda() {
+    const [mintPda] = await PublicKey.findProgramAddress(
       [Buffer.from('evg_s_mint')],
       this.programId
     );
-
-    const [treasuryPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('treasury')],
-      this.programId
-    );
-
-    const [feePda] = await PublicKey.findProgramAddress(
-      [Buffer.from('fee')],
-      this.programId
-    );
-
-    return {
-      vaultPda,
-      evgSMintPda,
-      treasuryPda,
-      feePda
-    };
+    return mintPda;
   }
 
-  // Gera ATAs para tokens
-  async getTokenAccounts(owner, mints) {
-    const accounts = {};
-    
-    for (const [key, mint] of Object.entries(mints)) {
-      accounts[key] = await PublicKey.findAssociatedTokenAddress(
-        owner,
-        new PublicKey(mint)
-      );
-    }
-
-    return accounts;
+  async getEvgLMintPda() {
+    const [mintPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('evg_l_mint')],
+      this.programId
+    );
+    return mintPda;
   }
 
-  // Gera todas as contas necessárias para uma operação
-  async getAllAccounts(walletAddress, usdcMint) {
-    const [vaultPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('vault')],
+  async getVaultUsdcAccountPda() {
+    const [accountPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('vault_usdc')],
       this.programId
     );
+    return accountPda;
+  }
 
-    const [evgSMintPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('evg_s_mint')],
+  async getVaultEvgSAccountPda() {
+    const [accountPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('vault_evg_s')],
       this.programId
     );
+    return accountPda;
+  }
 
-    const [treasuryPda] = await PublicKey.findProgramAddress(
-      [Buffer.from('treasury')],
+  async getVaultEvgLAccountPda() {
+    const [accountPda] = await PublicKey.findProgramAddress(
+      [Buffer.from('vault_evg_l')],
       this.programId
     );
+    return accountPda;
+  }
 
-    const [feePda] = await PublicKey.findProgramAddress(
-      [Buffer.from('fee')],
+  async getUserTokenAccountPda(userAddress, mintAddress) {
+    const [accountPda] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('user_token'),
+        new PublicKey(userAddress).toBuffer(),
+        new PublicKey(mintAddress).toBuffer()
+      ],
       this.programId
     );
+    return accountPda;
+  }
+
+  async getAllAccounts(userAddress, usdcMintAddress) {
+    const evgSMintPda = await this.getEvgSMintPda();
+    const evgLMintPda = await this.getEvgLMintPda();
+    const vaultUsdcAccountPda = await this.getVaultUsdcAccountPda();
+    const vaultEvgSAccountPda = await this.getVaultEvgSAccountPda();
+    const vaultEvgLAccountPda = await this.getVaultEvgLAccountPda();
+
+    const userUsdcAccountPda = await this.getUserTokenAccountPda(userAddress, usdcMintAddress);
+    const userEvgSAccountPda = await this.getUserTokenAccountPda(userAddress, evgSMintPda.toString());
+    const userEvgLAccountPda = await this.getUserTokenAccountPda(userAddress, evgLMintPda.toString());
 
     return {
-      vaultPda,
       evgSMintPda,
-      treasuryPda,
-      feePda,
+      evgLMintPda,
       tokenAccounts: {
-        usdc: new PublicKey(usdcMint),
-        evgS: evgSMintPda
+        usdc: userUsdcAccountPda,
+        evgS: userEvgSAccountPda,
+        evgL: userEvgLAccountPda,
+        vaultUsdc: vaultUsdcAccountPda,
+        vaultEvgS: vaultEvgSAccountPda,
+        vaultEvgL: vaultEvgLAccountPda
       }
     };
   }

@@ -1,26 +1,33 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createTransferInstruction, getAccount } from '@solana/spl-token';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+const API_BASE_URL = 'http://localhost:3000';
+const USDC_MINT = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'); // Devnet USDC
 
 interface VaultStats {
-  totalUsdc: number;
-  totalEvgS: number;
-  landTokens: {
-    address: string;
-    name: string;
-    value: number;
-  }[];
+  totalEvgS: string;
+  totalEvgL: string;
+  authority: string;
+  usdcMint: string;
+  treasuryAccount: string;
 }
 
 class VaultService {
   private connection: Connection;
+  private wallet: any;
 
   constructor() {
-    this.connection = new Connection(import.meta.env.VITE_SOLANA_RPC_URL || 'https://api.devnet.solana.com');
+    this.connection = new Connection(import.meta.env.VITE_SOLANA_RPC_URL || 'http://localhost:8899');
+  }
+
+  setWallet(wallet: any) {
+    this.wallet = wallet;
   }
 
   async getVaultStats(walletAddress: string): Promise<VaultStats> {
     try {
-      const response = await fetch(`/api/vault/stats?wallet=${walletAddress}`);
+      const response = await fetch(`${API_BASE_URL}/api/vault/stats?wallet=${walletAddress}`);
       if (!response.ok) {
         throw new Error('Failed to fetch vault stats');
       }
@@ -33,22 +40,60 @@ class VaultService {
 
   async depositUsdc(walletAddress: string, amount: number): Promise<string> {
     try {
-      const response = await fetch('/api/vault/deposit', {
+      if (!this.wallet) {
+        throw new Error('Wallet not connected');
+      }
+
+      // Get the vault's USDC account
+      const response = await fetch(`${API_BASE_URL}/api/vault/stats?wallet=${walletAddress}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch vault stats');
+      }
+      const vaultStats = await response.json();
+      const vaultUsdcAccount = new PublicKey(vaultStats.treasuryAccount);
+
+      // Get the user's USDC account
+      const userUsdcAccount = await getAssociatedTokenAddress(
+        USDC_MINT,
+        new PublicKey(walletAddress)
+      );
+
+      // Create transfer instruction
+      const transferInstruction = createTransferInstruction(
+        userUsdcAccount,
+        vaultUsdcAccount,
+        new PublicKey(walletAddress),
+        amount * 1e6 // Convert to USDC decimals (6)
+      );
+
+      // Create transaction and add recent blockhash
+      const transaction = new Transaction();
+      const { blockhash } = await this.connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = new PublicKey(walletAddress);
+      transaction.add(transferInstruction);
+
+      // Sign transaction with wallet
+      const signedTransaction = await this.wallet.adapter.signTransaction(transaction);
+      
+      // Send transaction to backend for processing
+      const response2 = await fetch(`${API_BASE_URL}/api/vault/deposit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           wallet: walletAddress,
-          amount
+          amount,
+          transaction: signedTransaction.serialize().toString('base64')
         }),
       });
 
-      if (!response.ok) {
+      if (!response2.ok) {
         throw new Error('Deposit failed');
       }
 
-      const { tx } = await response.json();
+      const { tx } = await response2.json();
       return tx;
     } catch (error) {
       console.error('Error depositing USDC:', error);
@@ -58,7 +103,7 @@ class VaultService {
 
   async getEvgSBalance(walletAddress: string): Promise<number> {
     try {
-      const response = await fetch(`/api/vault/evgs-balance?wallet=${walletAddress}`);
+      const response = await fetch(`${API_BASE_URL}/api/vault/evgs-balance?wallet=${walletAddress}`);
       if (!response.ok) {
         throw new Error('Failed to fetch EVG-S balance');
       }
@@ -72,7 +117,7 @@ class VaultService {
 
   async getLandTokens(walletAddress: string): Promise<Array<{ address: string; name: string; value: number }>> {
     try {
-      const response = await fetch(`/api/vault/land-tokens?wallet=${walletAddress}`);
+      const response = await fetch(`${API_BASE_URL}/api/vault/land-tokens?wallet=${walletAddress}`);
       if (!response.ok) {
         throw new Error('Failed to fetch land tokens');
       }
@@ -81,6 +126,21 @@ class VaultService {
     } catch (error) {
       console.error('Error fetching land tokens:', error);
       throw error;
+    }
+  }
+
+  async getUsdcBalance(walletAddress: string): Promise<number> {
+    try {
+      const userUsdcAccount = await getAssociatedTokenAddress(
+        USDC_MINT,
+        new PublicKey(walletAddress)
+      );
+
+      const account = await getAccount(this.connection, userUsdcAccount);
+      return Number(account.amount) / 1e6; // Convert from USDC decimals (6) to whole units
+    } catch (error) {
+      console.error('Error getting USDC balance:', error);
+      return 0;
     }
   }
 }

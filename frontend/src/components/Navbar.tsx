@@ -9,12 +9,12 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
-    <nav className="bg-evergreen-700 shadow-eco">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto ">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-white">Evergreen</span>
+              <span className="text-2xl font-bold text-evergreen-600">Evergreen</span>
             </Link>
           </div>
           <div className="flex items-center space-x-4">
@@ -24,18 +24,28 @@ export default function Navbar() {
                   to="/registry"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     isActive('/registry')
-                      ? 'bg-earth-500 text-white'
-                      : 'text-white hover:bg-earth-500/20'
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
                   }`}
                 >
                   Registry
                 </Link>
                 <Link
+                  to="/whitepaper"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/whitepaper')
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                  }`}
+                >
+                  White Paper
+                </Link>
+                <Link
                   to="/vault"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     isActive('/vault')
-                      ? 'bg-earth-500 text-white'
-                      : 'text-white hover:bg-earth-500/20'
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
                   }`}
                 >
                   Vault
@@ -44,8 +54,8 @@ export default function Navbar() {
                   to="/portfolio"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     isActive('/portfolio')
-                      ? 'bg-earth-500 text-white'
-                      : 'text-white hover:bg-earth-500/20'
+                      ? 'bg-white text-gray-900'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
                   }`}
                 >
                   Portfolio

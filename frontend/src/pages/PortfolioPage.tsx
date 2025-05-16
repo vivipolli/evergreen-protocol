@@ -49,22 +49,22 @@ export default function PortfolioPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-evergreen-800 mb-2">Portfolio</h1>
-        <p className="text-evergreen-600">
+        <h1 className="text-3xl font-bold text-white mb-2">Portfolio</h1>
+        <p className="text-white">
           Track your land token investments and their performance.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="card p-6">
-          <h2 className="text-xl font-semibold text-evergreen-800 mb-2">Total Portfolio Value</h2>
-          <p className="text-3xl font-bold text-evergreen-700">
+        <div className="bg-gray-300 rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Total Portfolio Value</h2>
+          <p className="text-3xl font-bold text-gray-900">
             {totalValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
           </p>
         </div>
-        <div className="card p-6">
-          <h2 className="text-xl font-semibold text-evergreen-800 mb-2">Average Performance</h2>
-          <p className="text-3xl font-bold text-evergreen-700">
+        <div className="bg-gray-300 rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Average Performance</h2>
+          <p className="text-3xl font-bold text-gray-900">
             {totalPerformance.toFixed(2)}%
           </p>
         </div>
@@ -72,49 +72,51 @@ export default function PortfolioPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tokens.map(token => (
-          <div key={token.id} className="card hover:shadow-eco-lg transition-all duration-300">
+          <div key={token.id} className="bg-gray-300 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
             <div className="relative h-48 mb-4">
               <img
                 src={token.image}
                 alt={token.name}
-                className="w-full h-full object-cover rounded-t-eco"
+                className="w-full h-full object-cover rounded-t-lg"
               />
-              <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-evergreen-700 font-semibold">
+              <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-gray-800 font-semibold">
                 {token.currentValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
               </div>
             </div>
             <div className="p-4">
-              <h3 className="text-xl font-semibold text-evergreen-800 mb-2">{token.name}</h3>
-              <p className="text-evergreen-600 mb-4 line-clamp-2">{token.description}</p>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">{token.name}</h3>
+              <p className="text-gray-600 mb-4 line-clamp-2">{token.description}</p>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-evergreen-500">Hectares</p>
-                  <p className="font-semibold text-evergreen-700">{token.hectares}</p>
+                  <p className="text-sm text-gray-500">Hectares</p>
+                  <p className="font-semibold text-gray-700">{token.hectares}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-evergreen-500">Vegetation</p>
-                  <p className="font-semibold text-evergreen-700">{token.vegetation}</p>
+                  <p className="text-sm text-gray-500">Vegetation</p>
+                  <p className="font-semibold text-gray-700">{token.vegetation}</p>
                 </div>
               </div>
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <p className="text-sm text-evergreen-500">Initial Value</p>
-                  <p className="font-medium text-evergreen-700">
+                  <p className="text-sm text-gray-500">Initial Value</p>
+                  <p className="font-medium text-gray-700">
                     {token.initialValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                   </p>
                 </div>
                 <div className="flex justify-between">
-                  <p className="text-sm text-evergreen-500">Performance</p>
+                  <p className="text-sm text-gray-500">Performance</p>
                   <p className={`font-medium ${token.performance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {token.performance >= 0 ? '+' : ''}{token.performance.toFixed(2)}%
                   </p>
                 </div>
                 <div className="flex justify-between">
-                  <p className="text-sm text-evergreen-500">Purchase Date</p>
-                  <p className="font-medium text-evergreen-700">{token.purchaseDate}</p>
+                  <p className="text-sm text-gray-500">Purchase Date</p>
+                  <p className="font-medium text-gray-700">{token.purchaseDate}</p>
                 </div>
               </div>
-              <button className="btn-primary w-full">View Details</button>
+              <button className="w-full bg-evergreen-600 text-white py-2 px-4 rounded-lg hover:bg-evergreen-700 transition-colors">
+                View Details
+              </button>
             </div>
           </div>
         ))}

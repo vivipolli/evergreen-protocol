@@ -4,8 +4,8 @@ export default function RegistryPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-evergreen-700 mb-8">Land Registry</h1>
-        <p className="text-lg text-evergreen-600 mb-12">
+        <h1 className="text-4xl font-bold text-white mb-8">Land Registry</h1>
+        <p className="text-lg text-white mb-12">
           Manage your land tokens and create new registries
         </p>
         
