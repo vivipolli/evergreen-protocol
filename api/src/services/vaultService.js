@@ -36,10 +36,23 @@ class VaultService {
     
     // Load wallet
     try {
-      const walletPath = process.env.ANCHOR_WALLET || '/home/vivi/.config/solana/id.json';
-      console.log('Loading wallet from:', walletPath);
-      const walletKeypair = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
-      const keypair = Keypair.fromSecretKey(new Uint8Array(walletKeypair));
+      let keypair;
+      if (process.env.NODE_ENV === 'production') {
+        // In production, use private key from environment variable
+        const privateKeyString = process.env.WALLET_PRIVATE_KEY;
+        if (!privateKeyString) {
+          throw new Error('WALLET_PRIVATE_KEY environment variable is not set');
+        }
+        const privateKeyArray = privateKeyString.split(',').map(num => parseInt(num));
+        keypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+      } else {
+        // In development, use wallet file
+        const walletPath = process.env.ANCHOR_WALLET || '/home/vivi/.config/solana/id.json';
+        console.log('Loading wallet from:', walletPath);
+        const walletKeypair = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+        keypair = Keypair.fromSecretKey(new Uint8Array(walletKeypair));
+      }
+      
       this.wallet = new Wallet(keypair);
       console.log('Wallet loaded:', this.wallet.publicKey.toString());
     } catch (error) {
